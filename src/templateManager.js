@@ -49,7 +49,7 @@ export default class TemplateManager {
     this.userID = null; // The ID of the current user
     this.encodingBase = '!#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~'; // Characters to use for encoding/decoding
     this.tileSize = 1000; // The number of pixels in a tile. Assumes the tile is square
-    this.drawMult = 3; // The enlarged size for each pixel. E.g. when "3", a 1x1 pixel becomes a 1x1 pixel inside a 3x3 area. MUST BE ODD
+    this.drawMult = 5; // The enlarged size for each pixel. E.g. when "5", a 1x1 pixel becomes a 1x1 pixel inside a 5x5 area. MUST BE ODD
     
     // Template
     this.canvasTemplate = null; // Our canvas
@@ -336,7 +336,8 @@ export default class TemplateManager {
 
               // Only evaluate the center pixel of each shread block
               // Skip if not the center pixel of the shread block
-              if ((x % this.drawMult) !== 1 || (y % this.drawMult) !== 1) { continue; }
+              const center = Math.floor(this.drawMult / 2);
+              if ((x % this.drawMult) !== center || (y % this.drawMult) !== center) { continue; }
 
               const gx = x + offsetX;
               const gy = y + offsetY;
@@ -445,16 +446,13 @@ export default class TemplateManager {
           for (let y = 0; y < tempH; y++) {
             for (let x = 0; x < tempW; x++) {
 
-              // If this pixel is NOT the center pixel, then skip the pixel
-              if ((x % this.drawMult) !== 1 || (y % this.drawMult) !== 1) { continue; }
-
               const idx = (y * tempW + x) * 4;
               const r = data[idx];
               const g = data[idx + 1];
               const b = data[idx + 2];
               const a = data[idx + 3];
 
-              if (a < 1) { continue; }
+              if (a < 64) { continue; }
 
               let key = activeTemplate.allowedColorsSet.has(`${r},${g},${b}`) ? `${r},${g},${b}` : 'other';
 
@@ -595,8 +593,9 @@ export default class TemplateManager {
                 const data = cx.getImageData(0, 0, w, h).data;
                 for (let y = 0; y < h; y++) {
                   for (let x = 0; x < w; x++) {
-                    // Only count center pixels of 3x blocks
-                    if ((x % this.drawMult) !== 1 || (y % this.drawMult) !== 1) { continue; }
+                    // Only count center pixels of shread blocks
+                    const center = Math.floor(this.drawMult / 2);
+                    if ((x % this.drawMult) !== center || (y % this.drawMult) !== center) { continue; }
                     const idx = (y * w + x) * 4;
                     const r = data[idx];
                     const g = data[idx + 1];

@@ -92,7 +92,9 @@ export default class Template {
   async createTemplateTiles() {
     console.log('Template coordinates:', this.coords);
 
-    const shreadSize = 3; // Scale image factor for pixel art enhancement (must be odd)
+    const shreadSize = 5; // Scale image factor for pixel art enhancement (must be odd)
+    const center = Math.floor(shreadSize / 2);
+    const keepRadius = 1; // Controls cross thickness within each 5x5 block
     const bitmap = await createImageBitmap(this.file); // Create efficient bitmap from uploaded file
     const imageWidth = bitmap.width;
     const imageHeight = bitmap.height;
@@ -234,10 +236,18 @@ export default class Template {
                 imageData.data[pixelIndex + 2] = 255;
               }
               imageData.data[pixelIndex + 3] = 32; // Make it translucent
-            } else if (x % shreadSize !== 1 || y % shreadSize !== 1) { // Otherwise only draw the middle pixel
-              imageData.data[pixelIndex + 3] = 0; // Make the pixel transparent on the alpha channel
             } else {
-              // Center pixel: keep only if in allowed site palette
+              const blockX = x % shreadSize;
+              const blockY = y % shreadSize;
+              const dx = Math.abs(blockX - center);
+              const dy = Math.abs(blockY - center);
+              const keep = (dx + dy) <= keepRadius;
+              if (!keep) {
+                imageData.data[pixelIndex + 3] = 0; // Make the pixel transparent on the alpha channel
+                continue;
+              }
+
+              // Center block: keep only if in allowed site palette
               const r = imageData.data[pixelIndex];
               const g = imageData.data[pixelIndex + 1];
               const b = imageData.data[pixelIndex + 2];
